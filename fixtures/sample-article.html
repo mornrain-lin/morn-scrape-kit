@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>缓存击穿：100 个并发请求同时打数据库 | MornRain 技术志</title>
+    <meta name="description" content="热点缓存键过期瞬间，成百上千并发请求会同时发现未命中并一起去查数据库，这就是缓存击穿。本文用令牌锁加随机抖动给出可落地的解法。">
+    <meta name="keywords" content="缓存击穿,高并发,Redis,PHP,WordPress">
+    <meta name="author" content="林墨">
+    <meta name="robots" content="index,follow,max-image-preview:large">
+    <meta name="generator" content="WordPress 6.6">
+
+    <link rel="canonical" href="https://example.com/blog/cache-stampede">
+    <link rel="alternate" hreflang="zh-CN" href="https://example.com/zh-cn/blog/cache-stampede">
+    <link rel="alternate" hreflang="en-US" href="https://example.com/en/blog/cache-stampede">
+    <link rel="alternate" hreflang="x-default" href="https://example.com/blog/cache-stampede">
+    <link rel="alternate" type="application/rss+xml" title="MornRain 技术志" href="https://example.com/blog/feed">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="MornRain 技术志">
+    <meta property="og:title" content="缓存击穿：100 个并发请求同时打数据库">
+    <meta property="og:description" content="热点缓存键过期瞬间的经典故障，以及令牌锁 + 随机抖动的解法。">
+    <meta property="og:url" content="https://example.com/blog/cache-stampede">
+    <meta property="og:image" content="https://example.com/uploads/2026/09/stampede-cover.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:locale" content="zh_CN">
+    <meta property="article:published_time" content="2026-09-29T16:45:00+08:00">
+    <meta property="article:author" content="林墨">
+    <meta property="article:section" content="架构">
+    <meta property="article:tag" content="缓存">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="缓存击穿：100 个并发请求同时打数据库">
+    <meta name="twitter:description" content="热点缓存键过期瞬间的经典故障与解法。">
+    <meta name="twitter:image" content="https://example.com/uploads/2026/09/stampede-cover.jpg">
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BlogPosting",
+        "headline": "缓存击穿：100 个并发请求同时打数据库",
+        "datePublished": "2026-09-29T16:45:00+08:00",
+        "dateModified": "2026-09-30T10:12:00+08:00",
+        "author": {"@type": "Person", "name": "林墨"},
+        "publisher": {"@type": "Organization", "name": "MornRain"},
+        "image": "https://example.com/uploads/2026/09/stampede-cover.jpg",
+        "inLanguage": "zh-CN"
+    }
+    </script>
+
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[
+        {"@type":"ListItem","position":1,"name":"首页","item":"https://example.com"},
+        {"@type":"ListItem","position":2,"name":"技术志","item":"https://example.com/blog"},
+        {"@type":"ListItem","position":3,"name":"文章详情"}
+    ]}
+    </script>
+
+    <style>.hero { background: #2f6fed; }</style>
+    <script>window.dataLayer = window.dataLayer || [];</script>
+</head>
+<body>
+
+<nav class="site-nav">
+    <a href="/">首页</a>
+    <a href="/blog/">技术志</a>
+    <a href="/about/">关于</a>
+</nav>
+
+<article class="post-content">
+    <h1>缓存击穿：100 个并发请求同时打数据库</h1>
+    <p class="meta">发布于 <time datetime="2026-09-29">2026-09-29</time> · 作者 <a href="/author/linmo" rel="author">林墨</a></p>
+
+    <p>缓存击穿是缓存击穿（cache stampede）的简称：<strong>某个热点键在过期的瞬间，
+    成百上千个并发请求同时发现「未命中」，然后一起去执行同一个昂贵的查询</strong>，
+    把数据库或下游服务打垮。</p>
+
+    <h2>为什么会发生</h2>
+    <p>最典型的场景是秒杀商品的库存缓存。假设缓存 TTL 是 60 秒：</p>
+    <pre><code>// t = 60.000s，缓存刚好过期
+// 此刻 1000 个请求同时到达
+if (cache.get('stock:sku-1') === null) {   // 全部未命中
+    $stock = $db->query('SELECT stock FROM ...');  // 1000 次相同查询
+    cache.set('stock:sku-1', $stock, 60);
+}</code></pre>
+
+    <p>关键点在于：<em>从「缓存过期」到「第一个请求把新值写回」之间存在时间窗口</em>。
+    窗口通常是几十毫秒，但足以让上百个请求挤进来。</p>
+
+    <blockquote>
+        <p>压测数据：某电商大促期间，单个商品缓存过期瞬间，数据库 QPS 从 200 飙到 18000，
+        数据库连接池瞬间打满，排队长度超过 3 秒。</p>
+    </blockquote>
+
+    <h2>三种解法对比</h2>
+    <table>
+        <thead>
+        <tr><th>方案</th><th>实现成本</th><th>效果</th><th>缺点</th></tr>
+        </thead>
+        <tbody>
+        <tr><td>永不过期 + 后台更新</td><td>高</td><td>彻底消除击穿</td><td>数据可能长期陈旧</td></tr>
+        <tr><td>逻辑过期</td><td>中</td><td>无感击穿</td><td>实现复杂，需处理脏读</td></tr>
+        <tr><td>互斥锁重建</td><td>低</td><td>有效缓解</td><td>锁失效时仍可能穿透</td></tr>
+        </tbody>
+    </table>
+
+    <h2>互斥锁重建：加上随机抖动</h2>
+    <p>最实用的方案是互斥锁。实现有三个容易踩的坑：</p>
+
+    <ol>
+        <li><strong>锁必须原子创建。</strong>用 <code>fopen($path, 'x')</code> 而不是
+        <code>file_exists()</code> 后再 <code>fopen()</code>，后者在并发下必然失效。</li>
+        <li><strong>锁要加随机抖动。</strong>不加抖动的话，同批写入的锁会在同一毫秒到期，
+        形成「锁惊群」——一万个请求同时发现锁消失，同时抢锁。默认 ±20% 随机化即可打散。</li>
+        <li><strong>锁必须有兜底过期。</strong>持锁进程崩溃后锁不会自动释放，
+        必须设置 TTL，否则该键永久无法重建。</li>
+    </ol>
+
+    <p>完整实现可以看 <a href="https://example.com/blog/morn-cache-forge">MornRain Cache Forge</a>
+    的 <code>StampedeLock</code> 类。第三方库可参考
+    <a href="https://redis.io/docs/latest/develop/use/patterns/distributed-locks/" rel="nofollow noopener" target="_blank">Redis 分布式锁文档</a>。</p>
+
+    <h2>降级策略不能省</h2>
+    <p>等待锁的过程中，如果超过阈值仍没拿到锁，<strong>不要返回错误</strong>。
+    宁可返回一份略微陈旧的数据，也不要让用户看到 503。</p>
+
+    <figure>
+        <img src="/uploads/2026/09/lock-timeline.png" alt="锁获取时间线" width="1200" height="600" loading="lazy" decoding="async">
+        <figcaption>图 1：加抖动后锁到期时间被均匀打散</figcaption>
+    </figure>
+
+    <h2>小结</h2>
+    <ul>
+        <li>用 <code>fopen('x')</code> 保证加锁原子性</li>
+        <li>锁 TTL 附加 ±20% 随机抖动，避免锁惊群</li>
+        <li>校验令牌才能释放锁，避免误删他人持有的锁</li>
+        <li>拿不到锁时降级返回陈旧数据，而非报错</li>
+        <li>回调抛异常时务必在 finally 中释放锁</li>
+    </ul>
+
+    <p>相关阅读：<a href="/blog/wordpress-performance">WordPress 前端性能优化实战</a>、
+    <a href="/blog/xmlreader">用 XMLReader 流式解析大体积订阅源</a>。</p>
+
+    <p>下载完整示例代码：<a href="/downloads/cache-forge.zip">cache-forge.zip</a>（MIT 协议）。</p>
+
+    <p>联系方式：<a href="mailto:hello@example.com">发邮件给我们</a>，
+    或拨打 <a href="tel:+8610000000000">010-0000-0000</a>。</p>
+</article>
+
+<nav class="pagination">
+    <a href="/blog/wordpress-performance" class="prev-post">上一篇：WordPress 前端性能优化实战</a>
+    <a href="/blog/xmlreader" class="next-post">下一篇：用 XMLReader 流式解析大体积订阅源</a>
+    <a href="/blog/page/2/" class="next page-numbers">下一页</a>
+</nav>
+
+<section id="comments" class="comments-area">
+    <h3>3 条评论</h3>
+    <div class="comment">
+        <p><a href="/author/suqing">苏晴</a> 说：</p>
+        <p>锁抖动这个细节很多文章都漏了。</p>
+    </div>
+    <div class="comment">
+        <p><a href="javascript:void(0)" onclick="alert('xss')">点我看广告</a> 说：</p>
+        <p>广告链接</p>
+    </div>
+</section>
+
+<footer class="site-footer">
+    <a href="/feed">RSS 订阅</a>
+    <a href="/sitemap.xml">站点地图</a>
+    <a href="https://github.com/MornRain" rel="noopener" target="_blank">GitHub</a>
+    <a href="data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==">数据链接</a>
+</footer>
+
+</body>
+</html>

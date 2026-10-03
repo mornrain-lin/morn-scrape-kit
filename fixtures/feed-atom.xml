@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="zh-CN">
+  <title type="text">MornRain Atom 测试</title>
+  <subtitle>Atom 1.0 格式</subtitle>
+  <link href="https://example.com/feed.atom" rel="self"/>
+  <link href="https://example.com/blog"/>
+  <id>urn:uuid:60a76c80-d399-11d9-b91C-0003939e0af6</id>
+  <updated>2026-10-02T08:00:00Z</updated>
+  <generator uri="https://example.com/" version="1.0">MornRain Publisher</generator>
+  <entry>
+    <title>Atom 条目一：流式解析</title>
+    <link href="https://example.com/atom/1" rel="alternate"/>
+    <link href="https://example.com/track/1" rel="tracking"/>
+    <id>urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a</id>
+    <updated>2026-10-02T07:00:00Z</updated>
+    <published>2026-10-01T07:00:00Z</published>
+    <author><name>苏晴</name><email>suqing@example.com</email></author>
+    <category term="PHP" label="PHP 编程"/>
+    <summary type="text">用 XMLReader 解析 Atom 的三个坑。</summary>
+    <content type="html">&lt;p&gt;正文内容：&lt;strong&gt;流式解析&lt;/strong&gt;。&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title type="html">Atom 条目二：&lt;em&gt;HTML 标题&lt;/em&gt; 转义测试</title>
+    <link href="https://example.com/atom/2"/>
+    <id>urn:uuid:2225c695-cfb8-4ebb-bbbb-80da344efa6a</id>
+    <updated>2026-09-30T07:00:00Z</updated>
+    <content type="xhtml"><div xmlns="http://www.w3.org/1999/xhtml"><p>XHTML 类型的 content</p></div></content>
+  </entry>
+</feed>

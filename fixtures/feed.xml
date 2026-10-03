@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"
+     xmlns:content="http://purl.org/rss/1.0/modules/content/"
+     xmlns:dc="http://purl.org/dc/elements/1.1/"
+     xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>MornRain 技术志</title>
+    <link>https://example.com/blog</link>
+    <atom:link href="https://example.com/blog/feed" rel="self" type="application/rss+xml"/>
+    <description>前端性能、WordPress 与 PHP 工程实践</description>
+    <language>zh-cn</language>
+    <managingEditor>editor@example.com (主编)</managingEditor>
+    <webMaster>webmaster@example.com</webMaster>
+    <lastBuildDate>Tue, 30 Sep 2026 08:00:00 +0800</lastBuildDate>
+    <generator>WordPress 6.6</generator>
+    <copyright>© 2026 MornRain</copyright>
+
+    <item>
+      <title>WordPress 前端性能优化实战：从 4.2s 到 1.1s</title>
+      <link>https://example.com/blog/wp-performance</link>
+      <guid isPermaLink="true">https://example.com/blog/wp-performance</guid>
+      <pubDate>Fri, 02 Oct 2026 09:30:00 +0800</pubDate>
+      <author>linmo@example.com (林墨)</author>
+      <category><![CDATA[性能优化]]></category>
+      <category><![CDATA[WordPress]]></category>
+      <description><![CDATA[<p>本文记录了一次完整的前端性能优化过程。</p>]]></description>
+      <content:encoded><![CDATA[<p>本文记录了一次完整的前端性能优化过程，包括<strong>资源分级</strong>、缓存策略与关键渲染路径的改造。</p><p>最终 LCP 从 4.2s 降到 1.1s。</p>]]></content:encoded>
+    </item>
+
+    <item>
+      <title>Schema.org JSON-LD 常见错误排查</title>
+      <link>https://example.com/blog/jsonld-errors</link>
+      <guid isPermaLink="true">https://example.com/blog/jsonld-errors</guid>
+      <pubDate>Thu, 01 Oct 2026 14:00:00 +0800</pubDate>
+      <dc:creator>苏晴</dc:creator>
+      <category>SEO</category>
+      <description>日期格式错误、缺少 @context、必填属性缺失，是最常见的三类问题。</description>
+      <enclosure url="https://example.com/audio/jsonld.mp3" type="audio/mpeg" length="5242880"/>
+    </item>
+
+    <item>
+      <title>用 XMLReader 流式解析大体积订阅源</title>
+      <link>https://example.com/blog/xmlreader</link>
+      <guid>urn:uuid:9f8e7d6c-0000-4000-8000-000000000001</guid>
+      <pubDate>Wed, 30 Sep 2026 11:20:00 +0800</pubDate>
+      <description>SimpleXML 会把整棵树载入内存，而 10 MB 的订阅源可能直接吃掉 200 MB。</description>
+    </item>
+
+    <item>
+      <title>缓存击穿：100 个并发请求同时打数据库</title>
+      <link>https://example.com/blog/cache-stampede</link>
+      <pubDate>Tue, 29 Sep 2026 16:45:00 +0800</pubDate>
+      <description>热点键过期瞬间的经典故障，以及令牌锁 + 随机抖动的解法。</description>
+    </item>
+  </channel>
+</rss>

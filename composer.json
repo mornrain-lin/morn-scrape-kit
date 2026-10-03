@@ -1,0 +1,68 @@
+{
+    "name": "mornrain/morn-scrape-kit",
+    "description": "合规的 HTML 解析与元数据提取库：SEO 元信息、RSS/Atom 流式解析、链接内外链分析、HTML 白名单清洗、robots.txt 判定与礼貌限速。零网络请求，PHP 7.4+。",
+    "type": "library",
+    "keywords": [
+        "html-parser",
+        "metadata",
+        "rss",
+        "atom",
+        "robots-txt",
+        "rate-limit",
+        "sanitizer",
+        "compliance",
+        "seo",
+        "feed-parser"
+    ],
+    "homepage": "https://github.com/MornRain/morn-scrape-kit",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "MornRain",
+            "homepage": "https://github.com/MornRain",
+            "role": "Developer"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/MornRain/morn-scrape-kit/issues",
+        "source": "https://github.com/MornRain/morn-scrape-kit",
+        "security": "https://github.com/MornRain/morn-scrape-kit/security/advisories/new",
+        "docs": "https://github.com/MornRain/morn-scrape-kit#readme"
+    },
+    "require": {
+        "php": ">=7.4",
+        "ext-mbstring": "*",
+        "ext-xmlreader": "*"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.6"
+    },
+    "suggest": {
+        "ext-dom": "若需 DOM 级操作（而非正则解析）可安装 ext-dom"
+    },
+    "autoload": {
+        "psr-4": {
+            "MornRain\\ScrapeKit\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "MornRain\\ScrapeKit\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "@php tests/run-tests.php",
+        "demo": "@php examples/extract.php",
+        "lint": "@php -l src/FeedItem.php && @php -l src/HtmlCleaner.php && @php -l src/LinkExtractor.php && @php -l src/MetaExtractor.php && @php -l src/RateLimiter.php && @php -l src/RobotsGuard.php && @php -l src/RssParser.php",
+        "test:phpunit": "phpunit",
+        "lint:style": "phpcs"
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "1.0.x-dev"
+        }
+    }
+}
