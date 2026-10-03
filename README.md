@@ -42,7 +42,7 @@ MornRain Scrape Kit 把这些**纯解析**的工作收敛成 6 个类，
 ## 安装
 
 ```bash
-composer require mornrain/morn-scrape-kit
+composer require mornrain-lin/morn-scrape-kit
 ```
 
 依赖：`ext-mbstring`、`ext-xmlreader`（均为常见默认扩展）。
@@ -487,7 +487,7 @@ composer lint:style    # PSR-12 代码风格
 
 ## License
 
-MIT License — Copyright (c) 2026 MornRain
+MIT License — Copyright (c) 2026 mornrain-lin
 
 详见 [LICENSE](LICENSE)。
 

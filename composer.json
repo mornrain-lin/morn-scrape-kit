@@ -1,5 +1,5 @@
 {
-    "name": "mornrain/morn-scrape-kit",
+    "name": "mornrain-lin/morn-scrape-kit",
     "description": "合规的 HTML 解析与元数据提取库：SEO 元信息、RSS/Atom 流式解析、链接内外链分析、HTML 白名单清洗、robots.txt 判定与礼貌限速。零网络请求，PHP 7.4+。",
     "type": "library",
     "keywords": [
@@ -14,20 +14,20 @@
         "seo",
         "feed-parser"
     ],
-    "homepage": "https://github.com/MornRain/morn-scrape-kit",
+    "homepage": "https://github.com/mornrain-lin/morn-scrape-kit",
     "license": "MIT",
     "authors": [
         {
-            "name": "MornRain",
-            "homepage": "https://github.com/MornRain",
+            "name": "mornrain-lin",
+            "homepage": "https://github.com/mornrain-lin",
             "role": "Developer"
         }
     ],
     "support": {
-        "issues": "https://github.com/MornRain/morn-scrape-kit/issues",
-        "source": "https://github.com/MornRain/morn-scrape-kit",
-        "security": "https://github.com/MornRain/morn-scrape-kit/security/advisories/new",
-        "docs": "https://github.com/MornRain/morn-scrape-kit#readme"
+        "issues": "https://github.com/mornrain-lin/morn-scrape-kit/issues",
+        "source": "https://github.com/mornrain-lin/morn-scrape-kit",
+        "security": "https://github.com/mornrain-lin/morn-scrape-kit/security/advisories/new",
+        "docs": "https://github.com/mornrain-lin/morn-scrape-kit#readme"
     },
     "require": {
         "php": ">=7.4",

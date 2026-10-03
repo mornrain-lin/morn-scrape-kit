@@ -130,4 +130,4 @@
 库内 `RobotsGuard` 与 `RateLimiter` 的作用是帮助使用者**更容易合规**，
 而非规避约束。
 
-[1.0.0]: https://github.com/MornRain/morn-scrape-kit/releases/tag/v1.0.0
+[1.0.0]: https://github.com/mornrain-lin/morn-scrape-kit/releases/tag/v1.0.0
